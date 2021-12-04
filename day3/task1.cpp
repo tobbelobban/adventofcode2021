@@ -31,7 +31,6 @@ int main(int argc, char const *argv[])
             eps |= 0x1;
         }
     }
-    cout << t<<endl;
     cout << gamma * eps << endl;
     return 0;
 }
