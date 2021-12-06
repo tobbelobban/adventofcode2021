@@ -1,4 +1,5 @@
 #include<iostream>
+#include<numeric>
 #include<vector>
 
 using namespace std;
@@ -6,12 +7,8 @@ using namespace std;
 int main(int argc, char const *argv[])
 {
     vector<unsigned long> fish(9,0);
-    unsigned long val;
     string line;
-    while(getline(cin,line,',')) {
-        val = stoul(line);
-        ++fish[val];
-    }
+    while(getline(cin,line,',')) ++fish[stoi(line)];
     unsigned long upper, lower;
     for(int i = 0; i < 256; ++i) {
         upper = fish[0];
@@ -24,8 +21,6 @@ int main(int argc, char const *argv[])
         fish[7] = fish[8];
         fish[8] = upper;
     }
-    val = 0;
-    for(unsigned long f : fish) val += f;
-    cout << val << endl;
+    cout << accumulate(fish.begin(), fish.end(), (unsigned long)(0)) << endl;
     return 0;
 }

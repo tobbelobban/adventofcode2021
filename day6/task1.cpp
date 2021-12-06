@@ -1,17 +1,14 @@
 #include<iostream>
 #include<vector>
+#include<numeric>
 
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
     vector<int> fish(9,0);
-    int val;
     string line;
-    while(getline(cin,line,',')) {
-        val = stoi(line);
-        ++fish[val];
-    }
+    while(getline(cin,line,',')) ++fish[stoi(line)];
     int upper, lower;
     for(int i = 0; i < 80; ++i) {
         upper = fish[0];
@@ -24,8 +21,6 @@ int main(int argc, char const *argv[])
         fish[7] = fish[8];
         fish[8] = upper;
     }
-    val = 0;
-    for(int f : fish) val += f;
-    cout << val << endl;
+    cout << accumulate(fish.begin(), fish.end(), 0) << endl;
     return 0;
 }
