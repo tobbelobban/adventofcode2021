@@ -2,6 +2,7 @@
 #include<cmath>
 #include<vector>
 #include<chrono>
+#include<numeric>
 
 using namespace std;
 
@@ -14,16 +15,23 @@ int main(int argc, char const *argv[])
     auto start = chrono::steady_clock::now();
     string next_pos;
     vector<int> v;
-    int val, init_guess = 0, n = 0;
+    int val, min = numeric_limits<int>::max(), max = numeric_limits<int>::min();
     while(getline(cin,next_pos,',')) {
         val = stoi(next_pos);
-        init_guess += val;
         v.push_back(val);
+        if(val > max) {
+            max = val;
+        } else if(val < min) {
+            min = val;
+        }
     }
-    n = v.size();
-    int cost = 0;
-    init_guess = floor((double)init_guess/n);
-    for(const int& i : v) cost += fuel_cost(abs(i - init_guess));
+    int cost = numeric_limits<int>::max(), new_cost;
+    for(int zero_pos = min; zero_pos < max; ++zero_pos) {
+        new_cost = 0;
+        for(const int& i : v) new_cost += fuel_cost(abs(i - zero_pos));
+        if(new_cost < cost) cost = new_cost;
+    }
+    
     auto end = chrono::steady_clock::now();
     cout << "Time: " << chrono::duration_cast<chrono::microseconds>(end-start).count() << " micros" << endl;
     std::cout << "Answer: " << cost << endl;
