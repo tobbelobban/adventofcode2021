@@ -1,8 +1,6 @@
 #include<iostream>
-#include<unordered_map>
-#include<numeric>
 #include<cmath>
-#include<algorithm>
+#include<vector>
 #include<chrono>
 
 using namespace std;
@@ -14,24 +12,20 @@ int fuel_cost(const int& dist) {
 int main(int argc, char const *argv[])
 {   
     auto start = chrono::steady_clock::now();
-    unordered_map<int,int> m;
     string next_pos;
+    vector<int> v;
     int val, init_guess = 0, n = 0;
     while(getline(cin,next_pos,',')) {
         val = stoi(next_pos);
         init_guess += val;
-        if(m.find(val) != m.end()) {
-            ++m[val];
-        } else {
-            m.insert({val,1});
-        }
-        ++n;
+        v.push_back(val);
     }
+    n = v.size();
     int cost = 0;
     init_guess = floor((double)init_guess/n);
-    for(auto iter = m.begin(); iter != m.end(); ++iter) cost += fuel_cost(abs(iter->first - init_guess)) * iter->second;
+    for(const int& i : v) cost += fuel_cost(abs(i - init_guess));
     auto end = chrono::steady_clock::now();
-    cout << "Time: " << chrono::duration_cast<chrono::milliseconds>(end-start).count() << " ms" << endl;
-    std::cout << cost << endl;
+    cout << "Time: " << chrono::duration_cast<chrono::microseconds>(end-start).count() << " micros" << endl;
+    std::cout << "Answer: " << cost << endl;
     return 0;
 }
