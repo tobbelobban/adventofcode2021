@@ -1,9 +1,9 @@
 #include<iostream>
 #include<unordered_map>
-#include<algorithm>
 #include<vector>
 #include<numeric>
 #include<cmath>
+#include<algorithm>
 
 using namespace std;
 
@@ -14,28 +14,23 @@ int fuel_cost(const int& dist) {
 int main(int argc, char const *argv[])
 {   
     unordered_map<int,int> m;
+    vector<int> v;
     string next_pos;
-    int val, min_val = numeric_limits<int>::max(), max_val = numeric_limits<int>::min();
+    int val, init_guess = 0;
     while(getline(cin,next_pos,',')) {
         val = stoi(next_pos);
-        if(val < min_val) {
-            min_val = val;
-        } else if(val > max_val) {
-            max_val = val;
-        }
+        init_guess += val;
+        v.push_back(val);
         if(m.find(val) != m.end()) {
             ++m[val];
         } else {
             m.insert({val,1});
         }
     }
-    int cost = numeric_limits<int>::max(), new_cost, h_pos_target;
-    for(int h_pos_target = min_val; h_pos_target < max_val; ++h_pos_target) {
-        new_cost = 0;
-        for(auto iter = m.begin(); iter != m.end(); ++iter) new_cost += fuel_cost(abs(iter->first - h_pos_target)) * iter->second;
-        if(new_cost > cost) break;
-        if(new_cost < cost) cost = new_cost;
-    }
-    cout << cost << endl;
+    sort(v.begin(), v.end());
+    int cost = 0;
+    init_guess = floor((double)init_guess/v.size());
+    for(auto iter = m.begin(); iter != m.end(); ++iter) cost += fuel_cost(abs(iter->first - init_guess)) * iter->second;
+    std::cout << cost << endl;
     return 0;
 }
