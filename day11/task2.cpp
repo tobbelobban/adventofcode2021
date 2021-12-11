@@ -48,7 +48,7 @@ unsigned long flashes(vector<vector<int>>& v) {
 int main(int argc, char const *argv[])
 {
     string line;
-    vector<vector<int>> v(10,vector<int>(10,0));
+    vector<vector<int>> v(HEIGHT,vector<int>(WIDTH,0));
     int row = 0;
     while(cin >> line) {
         for(int col = 0;  col < WIDTH; ++col) v[row][col] = line[col] - '0';
