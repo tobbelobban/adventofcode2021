@@ -64,14 +64,3 @@ int main(int argc, char const *argv[])
     cout << step << endl;
     return 0;
 }
-
-
-//      8 7 5 2 4
-//      2 1 8 9 3
-//      5 2 9 1 3
-//      1 7 4 3 2
-
-//      9 8 6 3 5
-//      3 2 9 10 4
-//      6 3 10 2 4
-//      2 8 5 4 3
