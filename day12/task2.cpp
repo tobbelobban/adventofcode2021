@@ -5,14 +5,23 @@
 
 using namespace std;
 
-int count_paths(const string& curr, unordered_map<string,vector<string>>& m, unordered_map<string,int>& remaining) {
+int count_paths(const string& curr, unordered_map<string,vector<string>>& m, unordered_map<string,int>& visited, const bool& repeat = false) {
     if(curr == "end") return 1;
     int res = 0;
     for(string& next : m[curr]) {
-        if(!remaining[next]) continue;
-        if(!isupper(next[0])) --remaining[next];
-        res += count_paths(next, m, remaining);
-        ++remaining[next];
+        if(next == "start") {
+            continue;
+        } else if(isupper(next[0])) {
+            res += count_paths(next, m, visited, repeat);
+        } else if(repeat && visited[next] == 1) {
+            ++visited[next];
+            res += count_paths(next, m, visited, false);
+            --visited[next];
+        } else if(!visited[next]){
+            ++visited[next];
+            res += count_paths(next, m, visited, repeat);
+            --visited[next];
+        }
     }
     return res;
 }
@@ -20,7 +29,7 @@ int count_paths(const string& curr, unordered_map<string,vector<string>>& m, uno
 int main(int argc, char const *argv[])
 {
     unordered_map<string,vector<string>> m;
-    unordered_map<string,int> remaining;
+    unordered_map<string,int> visited;
     string from, to;
     while(getline(cin,from,'-')) {
         getline(cin,to);
@@ -28,24 +37,16 @@ int main(int argc, char const *argv[])
             m[from].push_back(to);
         } else {
             m.insert({from,{to}});
-            remaining.insert({from,1});
+            visited.insert({from,0});
         }
         if(m.find(to) != m.end()) {
             m[to].push_back(from);
         } else {
             m.insert({to,{from}});
-            remaining.insert({to,1});
+            visited.insert({to,0});
         }
     }    
-    remaining["start"] = 0;
-    int base = count_paths("start", m, remaining), ans = base;
-    for(auto iter = remaining.begin(); iter != remaining.end(); ++iter) {
-        if(!(isupper(iter->first[0]) || iter->first == "start" || iter->first == "end")) {
-            ++(remaining[iter->first]);
-            ans += count_paths("start", m, remaining) - base;
-            --(remaining[iter->first]);
-        }
-    }
-    cout << ans << endl;
+    visited["start"] = 1;
+    cout << count_paths("start", m, visited, true) << endl;
     return 0;
 }
