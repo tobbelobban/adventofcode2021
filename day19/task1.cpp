@@ -4,55 +4,99 @@
 #include<queue>
 #include<unordered_map>
 
+#define NUM_ROTS 24
+
 using namespace std;
 
-bool has_beacon(const int scanner_id, int x, int y, int z, const vector<vector<vector<int>>>& scans) {
-    for(const auto& beacon : scans[scanner_id]) {
-        if(beacon[0] == x && beacon[1] == y && beacon[2] == z) return true;
+const int rotation_matrices[24][3][3] = {   
+    {{ 1, 0, 0}, { 0, 1, 0}, { 0, 0, 1}}, 
+    {{ 1, 0, 0}, { 0, 0,-1}, { 0, 1, 0}}, 
+    {{ 1, 0, 0}, { 0,-1, 0}, { 0, 0,-1}}, 
+    {{ 1, 0, 0}, { 0, 0, 1}, { 0,-1, 0}}, 
+
+    {{ 0, 1, 0}, {-1, 0, 0}, { 0, 0, 1}}, 
+    {{ 0, 1, 0}, { 0, 0,-1}, {-1, 0, 0}}, 
+    {{ 0, 1, 0}, { 1, 0, 0}, { 0, 0,-1}}, 
+    {{ 0, 1, 0}, { 0, 0, 1}, { 1, 0, 0}}, 
+
+    {{ 0, 0, 1}, { 0, 1, 0}, {-1, 0, 0}}, 
+    {{ 0, 0, 1}, {-1, 0, 0}, { 0,-1, 0}}, 
+    {{ 0, 0, 1}, { 0,-1, 0}, { 1, 0, 0}}, 
+    {{ 0, 0, 1}, { 1, 0, 0}, { 0, 1, 0}}, 
+
+    {{-1, 0, 0}, { 0,-1, 0}, { 0, 0, 1}}, 
+    {{-1, 0, 0}, { 0, 0,-1}, { 0,-1, 0}}, 
+    {{-1, 0, 0}, { 0, 1, 0}, { 0, 0,-1}}, 
+    {{-1, 0, 0}, { 0, 0, 1}, { 0, 1, 0}}, 
+
+    {{ 0,-1, 0}, { 1, 0, 0}, { 0, 0, 1}}, 
+    {{ 0,-1, 0}, { 0, 0,-1}, { 1, 0, 0}}, 
+    {{ 0,-1, 0}, {-1, 0, 0}, { 0, 0,-1}}, 
+    {{ 0,-1, 0}, { 0, 0, 1}, {-1, 0, 0}}, 
+
+    {{ 0, 0,-1}, { 0, 1, 0}, { 1, 0, 0}}, 
+    {{ 0, 0,-1}, {-1, 0, 0}, { 0, 1, 0}}, 
+    {{ 0, 0,-1}, { 0,-1, 0}, {-1, 0, 0}}, 
+    {{ 0, 0,-1}, { 1, 0, 0}, { 0,-1, 0}}
+};
+
+void rotate(vector<int>& pos, const int rot_id) {
+    const int* r1_ptr = &rotation_matrices[rot_id][0][0];
+    const int* r2_ptr = &rotation_matrices[rot_id][1][0];
+    const int* r3_ptr = &rotation_matrices[rot_id][2][0];
+    const int new_x = *(r1_ptr+0) * pos[0] + *(r1_ptr+1) * pos[1] + *(r1_ptr+2) * pos[2];
+    const int new_y = *(r2_ptr+0) * pos[0] + *(r2_ptr+1) * pos[1] + *(r2_ptr+2) * pos[2];
+    const int new_z = *(r3_ptr+0) * pos[0] + *(r3_ptr+1) * pos[1] + *(r3_ptr+2) * pos[2];
+    pos[0] = new_x;
+    pos[1] = new_y;
+    pos[2] = new_z;
+}
+
+void translate(vector<int>& pos, const vector<int>& d) {
+    pos[0] += d[0];
+    pos[1] += d[1];
+    pos[2] += d[2];
+}
+
+bool has_beacon(const int scanner_id, const vector<int>& b_curr, const vector<vector<vector<int>>>& scans) {
+    for(const vector<int>& beacon : scans[scanner_id]) {
+        if( beacon[0] == b_curr[0] && 
+            beacon[1] == b_curr[1] && 
+            beacon[2] == b_curr[2]  ) 
+            return true;
     }
     return false;
 }
 
-bool fit(const int curr, const vector<int>& fitted, vector<vector<vector<int>>>& scans) {
-    for(unsigned int ii = 0; ii < fitted.size(); ++ii) {
-        int i = fitted[ii];
-        for(unsigned int b1 = 0; b1 < scans[i].size(); ++b1) {
-            for(unsigned int b2 = 0; b2 < scans[curr].size(); ++b2) {
-                for(int x = -1; x < 2; x += 2) {
-                    for(int y = -1; y < 2; y += 2) {
-                        for(int z = -1; z < 2; z += 2) {
-                            for(int j = 0; j < 3; ++j) {
-                                for(int k = 0; k < 3; ++k) {
-                                    if(k == j) continue;
-                                    for(int l = 0; l < 3; ++l) {
-                                        if(l == k || l == j) continue;
-                                        int x_translate = scans[i][b1][0] - scans[curr][b2][j] * x;
-                                        int y_translate = scans[i][b1][1] - scans[curr][b2][k] * y;
-                                        int z_translate = scans[i][b1][2] - scans[curr][b2][l] * z;
-                                        int counter = 1;
-                                        for(unsigned int b3 = 0; b3 < scans[curr].size(); ++b3) {
-                                            if(b2 == b3) continue;
-                                            if(has_beacon(i, scans[curr][b3][j]*x + x_translate, scans[curr][b3][k]*y+y_translate, scans[curr][b3][l]*z+z_translate, scans)) {
-                                                ++counter;
-                                            }
-                                        }
-                                        if(counter >= 12) {
-                                            //cout << "MATCH B" << i << " and " << "B" << curr << endl;
-                                            for(unsigned int b = 0; b < scans[curr].size(); ++b) {
-                                                int new_x = scans[curr][b][j]*x + x_translate;
-                                                int new_y = scans[curr][b][k]*y + y_translate;
-                                                int new_z = scans[curr][b][l]*z + z_translate;
-                                                scans[curr][b][0] = new_x;
-                                                scans[curr][b][1] = new_y;
-                                                scans[curr][b][2] = new_z;
-                                                //cout << new_x << "  " << new_y << "  " << new_z << endl;
-                                            }
-                                            return true;
-                                        }
-                                    }
-                                }
-                            }
+bool new_fit(const int curr, const vector<int>& fitted, vector<vector<vector<int>>>& scans, vector<vector<int>>& tested) {
+    for(const int& i : fitted) {
+        if(tested[curr][i]) continue;
+        tested[curr][i] = 1;
+        for(const vector<int>& b_i : scans[i]) {
+            for(unsigned int i1_curr = 0; i1_curr < scans[curr].size(); ++i1_curr) {
+                for(int rot = 0; rot < NUM_ROTS; ++rot) {
+                    vector<int> b1_curr = scans[curr][i1_curr];
+                    vector<vector<int>> updated_beacons(scans[curr].size(), vector<int>(3,0));
+                    rotate(b1_curr, rot);  
+                    vector<int> d{b_i[0] - b1_curr[0], b_i[1] - b1_curr[1], b_i[2] - b1_curr[2]}; 
+                    translate(b1_curr, d);
+                    updated_beacons[i1_curr] = b1_curr;
+                    int counter = 1;    
+                    for(unsigned int i2_curr = 0; i2_curr < scans[curr].size(); ++i2_curr) {
+                        if(i1_curr == i2_curr) continue;
+                        vector<int> b2_curr = scans[curr][i2_curr];
+                        rotate(b2_curr, rot);
+                        translate(b2_curr, d);
+                        updated_beacons[i2_curr] = b2_curr;
+                        if(has_beacon(i, b2_curr, scans)) {
+                            ++counter;
                         }
+                    }
+                    if(counter >= 12) {
+                        for(unsigned int i2_curr = 0; i2_curr < scans[curr].size(); ++i2_curr) {
+                            scans[curr][i2_curr] = updated_beacons[i2_curr];
+                        }
+                        return true;
                     }
                 }
             }
@@ -72,7 +116,6 @@ int main(int argc, char const *argv[]) {
     int counter = 0;
     while(getline(cin,scanner_id_str)) {
         vector<vector<int>> current_scan;
-        remaining.push(counter++);
         while(getline(cin, coord_str) && !coord_str.empty()) {
             vector<int> coords;
             int first_comma_pos = coord_str.find(',');
@@ -85,20 +128,22 @@ int main(int argc, char const *argv[]) {
             current_scan.push_back(coords);
         }
         scans.push_back(current_scan);
+        remaining.push(counter++);
     }
+    vector<vector<int>> tested(scans.size(), vector<int>(scans.size(),0));
     vector<int> fitted = {0};
     remaining.pop();
     --counter;
     while(counter) {
         const int curr = remaining.front();
         remaining.pop();
-        if(fit(curr, fitted, scans)) {
+        if(new_fit(curr, fitted, scans, tested)) {
             fitted.push_back(curr);
             --counter;
         } else {
             remaining.push(curr);
         }
-        cout << counter << endl;
+        cout << "Remaining scanners to fit: " << counter << endl;
     }
     unordered_map<int,int> beacon_counts;
     counter = 0;
