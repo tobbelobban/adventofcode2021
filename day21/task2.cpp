@@ -19,6 +19,7 @@
 // 10: 0
 
 #include<iostream>
+#include<chrono>
 
 #define P1_START 6
 #define P2_START 2
@@ -26,37 +27,43 @@
 
 typedef unsigned long long bignum;
 
-using std::cout; using std::endl;
+using namespace std::chrono;
+using std::cout; using std::endl; 
+
 
 constexpr int occ_v[] = {0, 0, 0, 1, 3, 6, 7, 6, 3, 1, 0};
 
-void count_wins(int p1_pos, int p2_pos, int p1_score, int p2_score, bignum paths, bignum * wins, bool is_p1) {
-    if(is_p1) {
-        for(int i = 3; i < 10; ++i) {
-            int tmp_pos = (p1_pos + i);
-            tmp_pos = (tmp_pos % 10) ? tmp_pos % 10 : 10;
-            if(p1_score + tmp_pos >= TARGET) {
-                *wins += occ_v[i] * paths;
-            } else {
-                count_wins(tmp_pos, p2_pos, p1_score + tmp_pos, p2_score, paths * occ_v[i], wins, !is_p1);
-            }        
-        }
-    } else {
-        for(int i = 3; i < 10; ++i) {
-            int tmp_pos = (p2_pos + i);
-            tmp_pos = (tmp_pos % 10) ? tmp_pos % 10 : 10;
-            if(p2_score + tmp_pos >= TARGET) {
-                *(wins + 1) += occ_v[i] * paths;
-            } else {
-                count_wins(p1_pos, tmp_pos, p1_score, p2_score + tmp_pos, paths * occ_v[i], wins, !is_p1);
-            }
-        }
+void count_wins(int* pos, int* scores, bignum paths, bignum* wins, int curr) {
+    int new_pos, tmp_pos;
+    for(int i = 3; i < 10; ++i) {
+        new_pos = (*(pos+curr) + i) % 10;
+        new_pos = new_pos ? new_pos : 10;
+        if(*(scores+curr) + new_pos >= TARGET) {
+            *(wins+curr) += *(occ_v+i) * paths;
+        } else {
+            tmp_pos = *(pos+curr);
+            *(pos+curr) = new_pos;
+            *(scores+curr) += new_pos;
+            count_wins(pos, scores, paths * *(occ_v+i), wins, curr ? 0 : 1);
+            *(pos+curr) = tmp_pos;
+            *(scores+curr) -= new_pos;
+        }        
     }
 }
 
 int main() {
+    auto start = high_resolution_clock::now();
+
+    int positions[] = {P1_START, P2_START};
+    int scores[] = {0,0};
     bignum wins[] = {0, 0};
-    count_wins(P1_START, P2_START, 0, 0, 1, wins, true);
+
+    count_wins(positions, scores, 1, wins, 0);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
     cout << "P1 #wins = \t" << wins[0]
-            << "\nP2 #wins = \t" << wins[1] << endl;
+            << "\nP2 #wins = \t" << wins[1] <<
+                "\nTime (ms): \t" << duration.count() << endl;
 }
